@@ -14,7 +14,7 @@
 
 ### 对话首页
 
-![对话首页](../../docs/images/chat-home.png)
+![对话首页](../../blob/main/docs/images/chat-home.png)
 
 ![对话首页-示例](../../spring_ai_Iot_agent/docs/images/chat-home-2.png)
 
