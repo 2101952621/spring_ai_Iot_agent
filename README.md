@@ -10,7 +10,7 @@
 
 ### 登录页
 
-![登录页](../../spring_ai_Iot_agent/docs/images/login.png)
+![登录页](../docs/images/login.png)
 
 ### 对话首页
 
