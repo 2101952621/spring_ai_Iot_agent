@@ -7,24 +7,9 @@
 ## Web UI 预览
 
 配套前端仓库：[spring_ai_Iot_agent_web](https://github.com/2101952621/spring_ai_Iot_agent_web)
+<img width="1868" height="915" alt="user_login" src="https://github.com/user-attachments/assets/7208c488-1925-48a7-b071-802fb84d9f84" />
 
-### 登录页
-
-![登录页](../docs/images/login.png)
-
-### 对话首页
-
-![对话首页](../../blob/main/docs/images/chat-home.png)
-
-![对话首页-示例](../../spring_ai_Iot_agent/docs/images/chat-home-2.png)
-
-### 知识问答
-
-![知识问答](../../spring_ai_Iot_agent/docs/images/chat-knowledge.png)
-
-### 设备推荐
-
-![设备推荐](../../spring_ai_Iot_agent/docs/images/chat-recommend.png)
+<img width="1872" height="897" alt="login_in" src="https://github.com/user-attachments/assets/e8a9d89e-7f3d-4ad8-a157-d53de2be58f3" />
 
 ---
 
