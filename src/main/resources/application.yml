@@ -1,0 +1,114 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: ai-server
+  # ================================================================
+  # Spring AI Configuration - 阿里云通义千问（DashScope OpenAI兼容接口）
+  # ================================================================
+  elasticsearch:
+    uris: "${SPRING_ELASTICSEARCH_URIS:https://localhost:9200}"
+    username: "${SPRING_ELASTICSEARCH_USERNAME:elastic}"
+    password: "${SPRING_ELASTICSEARCH_PASSWORD:elastic}"
+  ai:
+    openai:
+      # 阿里云 DashScope API Key
+      api-key: "${SPRING_AI_OPENAI_API_KEY:sk-prod-5e202000000000000000000000000000}"
+      # DashScope OpenAI兼容接口地址
+      base-url: "${SPRING_AI_OPENAI_BASE_URL:https://dashscope.aliyuncs.com/compatible-mode}"
+      # Chat 模型配置（千问 Qwen3.7-Max）
+      chat:
+        enabled: true
+        options:
+          # 模型名称:qwen3.7-plus 对应千问最强旗舰版
+          model: "${SPRING_AI_OPENAI_CHAT_MODEL:qwen3.7-plus}"
+          # 温度参数（0-1），控制输出随机性
+          temperature: "${SPRING_AI_OPENAI_CHAT_TEMPERATURE:0.7}"
+          # 最大输出 Token 数
+          max-tokens: "${SPRING_AI_OPENAI_CHAT_MAX_TOKENS:4096}"
+      # Embedding 向量模型配置（千问 Text-Embedding）
+      embedding:
+        enabled: true
+        options:
+          # 模型名称: text-embedding-v3 对应千问向量模型
+          model: "${SPRING_AI_OPENAI_EMBEDDING_MODEL:qwen3.7-text-embedding}"
+    # Elasticsearch 向量存储配置（RAG 设备检索）
+    vectorstore:
+      elasticsearch:
+        # ES 连接地址
+        uris: "${SPRING_AI_VECTORSTORE_ELASTICSEARCH_URIS:http://localhost:9200}"
+        # ES 索引名称（存储设备向量文档）
+        index-name: "${SPRING_AI_VECTORSTORE_ELASTICSEARCH_INDEX:device_base_info_vectors}"
+        # 启动时自动创建索引
+        initialize-schema: true
+        # 向量维度（text-embedding-v3 模型为 1024 维）
+        dimensions: 1024
+        # 相似度算法: cosine（余弦相似度）
+        similarity: cosine
+  logging:
+    level:
+      org.springframework.ai.chat.client.advisor: DEBUG
+  datasource:
+    # Database driver for Spring JPA - org.postgresql.Driver
+    driverClassName: "${SPRING_DRIVER_CLASS_NAME:org.postgresql.Driver}"
+    # Database connection URL
+    url: "${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/ai_server}"
+    # Database user name
+    username: "${SPRING_DATASOURCE_USERNAME:postgres}"
+    # Database user password
+    password: "${SPRING_DATASOURCE_PASSWORD:postgres}"
+
+  jpa:
+    properties:
+      jakarta.persistence.query.timeout: "${JAVAX_PERSISTENCE_QUERY_TIMEOUT:30000}"
+      hibernate:
+        jdbc:
+          batch_size: "${JAVAX_JDBC_BATCH_SIZE:1000}" # 设置循环次数
+    open-in-view: "false" # 关闭延迟加载
+    hibernate:
+      ddl-auto: "none"
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      database: 0
+      password: 123456
+      timeout: 3000ms
+    jpa:
+      repositories:
+        enabled: "true"
+  mail:
+    host: smtp.qq.com
+    port: 587
+    username: test@qq.com
+    password: 888888888888
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+# ================================================================
+# JWT Configuration
+# ================================================================
+jwt:
+  # JWT 签名密钥（HMAC-SHA256，要求至少 256-bit / 32 字符）
+  # 生产环境务必通过环境变量覆盖，切勿硬编码
+  secret: ${JWT_SECRET:your-256-bit-secret-key-for-jwt-token-generation-must-be-long-enough}
+  # Access Token 有效期（毫秒），默认 24 小时
+  expiration: ${JWT_EXPIRATION:86400000}
+  # Refresh Token 有效期（毫秒），默认 7 天
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}
+
+# Application config
+app:
+  base-url: http://localhost:8080
+  email-from: noreply@agent.com
+
+logging:
+  level:
+    com.ai.agent: DEBUG
+    org.springframework.ai: DEBUG
