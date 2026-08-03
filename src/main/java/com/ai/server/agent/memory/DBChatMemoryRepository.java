@@ -52,6 +52,7 @@ public class DBChatMemoryRepository implements ChatMemoryRepository {
         Assert.hasText(conversationId, "conversationId cannot be null or empty");
         Assert.notNull(messages, "messages cannot be null");
         Assert.noNullElements(messages, "messages cannot contain null elements");
+        chatMessageService.deleteByConversationId(conversationId);
         List<ChatMessageEntity> entities = messages.stream()
                 .map(message -> toEntity(conversationId, messages.indexOf(message), message))
                 .collect(Collectors.toList());
