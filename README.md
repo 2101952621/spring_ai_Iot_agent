@@ -1,6 +1,8 @@
-# Agent AI Server — 打造一站式企业物联网云智能AI解决方案。目前支持:智能设备推荐与知识答疑AI服务
-# 后续支持功能: AI排障、AI网优、AI系统文档帮助、AI一键打开网页、AI辅助家庭网络设备部署拓扑结构等等。
-基于 **Spring Boot 3.2 + Spring AI 1.1** 构建的企业级 AI 服务，集成 **RAG 向量检索** + **Tool Calling**，提供智能设备推荐和领域知识问答能力。
+# Spring AI IoT Agent
+
+基于 **Spring Boot 3.2 + Spring AI 1.1** 构建的物联网智能 AI 助手，集成 **RAG 向量检索** + **Tool Calling**，支持智能设备推荐与知识问答。
+
+> 后续规划：AI 排障、AI 网优、AI 系统文档帮助、AI 一键打开网页、AI 辅助家庭网络设备部署拓扑等。
 
 ---
 

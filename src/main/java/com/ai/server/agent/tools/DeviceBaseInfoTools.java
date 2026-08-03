@@ -36,6 +36,7 @@ public class DeviceBaseInfoTools {
                 .price(entity.getPrice() != null ? entity.getPrice() : BigDecimal.ZERO)
                 .detail(entity.getDetail())
                 .core(entity.getCore())
+                .suitableScenarios(entity.getSuitableScenarios())
                 .productUrl(entity.getProductUrl())
                 .build();
     }

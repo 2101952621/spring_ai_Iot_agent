@@ -20,5 +20,6 @@ public class DeviceBaseInfo implements Serializable {
     private BigDecimal price;
     private String detail;
     private String core;
+    private String suitableScenarios;
     private String productUrl;
 }
