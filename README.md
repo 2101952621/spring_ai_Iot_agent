@@ -6,14 +6,12 @@
 
 ---
 
-## Web UI 预览
+## 功能预览
 
 配套前端仓库：[spring_ai_Iot_agent_web](https://github.com/2101952621/spring_ai_Iot_agent_web)
-<img width="1868" height="915" alt="user_login" src="https://github.com/user-attachments/assets/7208c488-1925-48a7-b071-802fb84d9f84" />
 
-<img width="1866" height="909" alt="图片" src="https://github.com/user-attachments/assets/03ddbbf2-ec0d-4370-a544-9e0bfc6822f1" />
+https://github.com/user-attachments/assets/e391efb8-b3e0-4c3a-8a7b-15a333243000
 
-<img width="1872" height="897" alt="login_in" src="https://github.com/user-attachments/assets/e8a9d89e-7f3d-4ad8-a157-d53de2be58f3" />
 
 ---
 
