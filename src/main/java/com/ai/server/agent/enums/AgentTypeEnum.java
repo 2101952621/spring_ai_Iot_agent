@@ -28,6 +28,11 @@ public enum AgentTypeEnum {
     KNOWLEDGE("KNOWLEDGE"),
 
     /**
+     * 网页功能打开智能体 — 一键打开网页功能（Tool Calling + CARD 事件）
+     */
+    WEB_OPEN("WEB_OPEN"),
+
+    /**
      * 兜底智能体 — 处理所有未匹配的请求
      */
     FALLBACK("FALLBACK");

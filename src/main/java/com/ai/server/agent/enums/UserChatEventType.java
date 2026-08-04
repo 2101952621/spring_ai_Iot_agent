@@ -19,7 +19,12 @@ public enum UserChatEventType {
     /**
      * 参数事件
      */
-    PARAM(1003);
+    PARAM(1003),
+
+    /**
+     * 卡片事件 — 前端渲染"打开网页"等功能卡片（带按钮）
+     */
+    CARD(1004);
 
     private final int value;
 }

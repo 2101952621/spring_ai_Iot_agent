@@ -4,9 +4,10 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
 import com.ai.server.agent.enums.UserChatEventType;
-import com.ai.server.model.vo.ChatEventVO;
+import com.ai.server.agent.tools.WebFunctionTools;
 import com.ai.server.config.Constant;
 import com.ai.server.config.ToolResultUtils;
+import com.ai.server.model.vo.ChatEventVO;
 import com.ai.server.service.RedisService;
 import com.ai.server.service.ai.AgentService;
 import jakarta.annotation.Resource;
@@ -19,6 +20,8 @@ import org.springframework.ai.chat.model.Generation;
 import org.springframework.context.annotation.Lazy;
 import reactor.core.publisher.Flux;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -163,45 +166,49 @@ public abstract class AbstractBaseAgent implements BaseAgent {
         var metadata = result.getMetadata();
         var finishReason = metadata != null ? metadata.getFinishReason() : null;
         var isStop = StrUtil.equals(Constant.STOP, finishReason);
-
         if (isStop) {
             var responseMetadata = chatResponse.getMetadata();
             if (responseMetadata != null) {
-                var messageId = responseMetadata.getId();
-                ToolResultUtils.put(messageId, Constant.REQUEST_ID, requestId);
+                ToolResultUtils.put(responseMetadata.getId(), Constant.REQUEST_ID, requestId);
             }
         }
-
         var output = result.getOutput();
         var text = output != null ? output.getText() : null;
         if (text != null) {
             outputBuilder.append(text);
         }
-
         if (StrUtil.isEmpty(text)) {
             return isStop ? Flux.just(STOP_EVENT) : Flux.empty();
         }
-
         var dataEvent = ChatEventVO.builder()
                 .eventData(text)
                 .eventType(UserChatEventType.DATA.getValue())
                 .build();
-
-        if (!isStop) {
+        if (isStop) {
+            return Flux.just(dataEvent, STOP_EVENT);
+        }
+        var toolResultMap = ToolResultUtils.get(requestId);
+        if (CollUtil.isEmpty(toolResultMap)) {
             return Flux.just(dataEvent);
         }
+        ToolResultUtils.remove(requestId);
+        return Flux.fromIterable(buildToolResultEvents(dataEvent, toolResultMap));
+    }
 
-        // 流结束，发送参数事件（如有）+ STOP 事件
-        var toolResultMap = ToolResultUtils.get(requestId);
-        if (CollUtil.isNotEmpty(toolResultMap)) {
-            ToolResultUtils.remove(requestId);
-            var paramEvent = ChatEventVO.builder()
-                    .eventData(toolResultMap)
-                    .eventType(UserChatEventType.PARAM.getValue())
-                    .build();
-            return Flux.just(dataEvent, paramEvent, STOP_EVENT);
+    private List<ChatEventVO> buildToolResultEvents(ChatEventVO dataEvent,
+                                                     Map<String, Object> toolResultMap) {
+        List<ChatEventVO> events = new ArrayList<>(4);
+        events.add(dataEvent);
+
+        Object webFunction = toolResultMap.get(WebFunctionTools.TOOL_RESULT_KEY);
+        if (webFunction != null) {
+            events.add(ChatEventVO.builder()
+                    .eventType(UserChatEventType.CARD.getValue())
+                    .eventData(webFunction)
+                    .build());
         }
-        return Flux.just(dataEvent, STOP_EVENT);
+        events.add(STOP_EVENT);
+        return events;
     }
 
     private void saveStopHistoryRecord(String conversationId, String content) {
