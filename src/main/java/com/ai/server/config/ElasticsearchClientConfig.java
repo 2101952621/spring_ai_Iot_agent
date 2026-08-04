@@ -3,6 +3,7 @@ package com.ai.server.config;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
@@ -77,8 +78,8 @@ public class ElasticsearchClientConfig {
      */
     @Bean
     @Primary
-    public ElasticsearchClient elasticsearchClient(RestClient restClient) {
-        var transport = new RestClientTransport(restClient, new JacksonJsonpMapper());
+    public ElasticsearchClient elasticsearchClient(RestClient restClient, ObjectMapper objectMapper) {
+        var transport = new RestClientTransport(restClient, new JacksonJsonpMapper(objectMapper));
         return new ElasticsearchClient(transport);
     }
 }

@@ -22,31 +22,31 @@ public class ChatSessionController {
     @PostMapping
     public UserSessionVO createSession(@RequestParam(value = "n", defaultValue = "3") Integer num) {
         SecurityUser currentUser = SecurityUtils.currentUser();
-        return this.chatSessionService.createSession(num, currentUser);
+        return chatSessionService.createSession(num, currentUser);
     }
 
     @GetMapping("/{sessionId}")
     public List<MessageVO> queryBySessionId(@PathVariable("sessionId") String sessionId) {
         SecurityUser currentUser = SecurityUtils.currentUser();
-        return this.chatSessionService.queryBySessionId(sessionId, currentUser);
+        return chatSessionService.queryBySessionId(sessionId, currentUser);
     }
 
     @GetMapping("/history")
     public Map<String, List<ChatSessionVO>> queryHistorySession() {
         SecurityUser currentUser = SecurityUtils.currentUser();
-        return this.chatSessionService.queryHistorySession(currentUser);
+        return chatSessionService.queryHistorySession(currentUser);
     }
 
     @DeleteMapping("/history")
     public void deleteHistorySession(@RequestParam("sessionId") String sessionId) {
         SecurityUser currentUser = SecurityUtils.currentUser();
-        this.chatSessionService.deleteHistorySession(sessionId, currentUser);
+        chatSessionService.deleteHistorySession(sessionId, currentUser);
     }
 
     @PutMapping("/history")
     public void updateTitle(@RequestParam("sessionId") String sessionId,
                             @RequestParam("title") String title) {
         SecurityUser currentUser = SecurityUtils.currentUser();
-        this.chatSessionService.updateTitle(sessionId, title, currentUser);
+        chatSessionService.updateTitle(sessionId, title, currentUser);
     }
 }
