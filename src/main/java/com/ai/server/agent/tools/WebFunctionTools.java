@@ -13,7 +13,6 @@ import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.Objects;
 
 /**
  * 网页功能查询工具
@@ -37,14 +36,11 @@ public class WebFunctionTools {
     public List<WebFunctionInfo> queryWebFunctionByName(@ToolParam(description = "用户提到的功能名称或关键词") String keyword,
             ToolContext toolContext) {
 
-        List<WebFunctionEntity> enabled = webFunctionRepository.findByIsEnabledTrueOrderBySortOrderAsc();
         if (StrUtil.isBlank(keyword)) {
             return List.of();
         }
-        String kw = keyword.trim();
-        List<WebFunctionInfo> matches = enabled.stream()
-                .filter(Objects::nonNull)
-                .filter(e -> matchKeyword(e, kw))
+        List<WebFunctionInfo> matches = webFunctionRepository.searchEnabledByKeyword(keyword.trim())
+                .stream()
                 .map(this::convert)
                 .toList();
         if (!matches.isEmpty()) {
@@ -58,19 +54,6 @@ public class WebFunctionTools {
             }
         }
         return matches;
-    }
-
-    private boolean matchKeyword(WebFunctionEntity e, String kw) {
-        return containsIgnoreCase(e.getFunctionName(), kw)
-                || containsIgnoreCase(e.getFunctionCode(), kw)
-                || containsIgnoreCase(e.getDescription(), kw)
-                || containsIgnoreCase(e.getModule(), kw)
-                || containsIgnoreCase(e.getSuitableDevices(), kw);
-    }
-
-    private boolean containsIgnoreCase(String text, String kw) {
-        if (text == null || text.isBlank()) return false;
-        return text.toLowerCase().contains(kw.toLowerCase());
     }
 
     private WebFunctionInfo convert(WebFunctionEntity e) {
