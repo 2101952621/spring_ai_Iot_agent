@@ -4,6 +4,7 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
 import com.ai.server.agent.enums.UserChatEventType;
+import com.ai.server.agent.tools.LogOperationTools;
 import com.ai.server.agent.tools.WebFunctionTools;
 import com.ai.server.config.Constant;
 import com.ai.server.config.ToolResultUtils;
@@ -64,9 +65,9 @@ public abstract class AbstractBaseAgent implements BaseAgent {
      */
     @Override
     public String process(String question, String sessionId, UUID userId) {
-        var requestId = this.generateRequestId();
+        var requestId = generateRequestId();
         var conversationId = agentService.getConversationId(userId, sessionId);
-        return this.getChatClientRequest(userId, sessionId, requestId, conversationId, question)
+        return getChatClientRequest(userId, sessionId, requestId, conversationId, question)
                 .call()
                 .content();
     }
@@ -76,27 +77,27 @@ public abstract class AbstractBaseAgent implements BaseAgent {
      */
     @Override
     public Flux<ChatEventVO> processStream(String question, String sessionId, UUID userId) {
-        var requestId = this.generateRequestId();
+        var requestId = generateRequestId();
         var conversationId = agentService.getConversationId(userId, sessionId);
         var outputBuilder = new StringBuilder();
-        this.beforeProcessStream(question, sessionId, userId, requestId);
-        return this.getChatClientRequest(userId, sessionId, requestId, conversationId, question)
+        beforeProcessStream(question, sessionId, userId, requestId);
+        return getChatClientRequest(userId, sessionId, requestId, conversationId, question)
                 .stream()
                 .chatResponse()
                 .doFirst(() ->
                         redisService.setCacheObject(generateStatusKey(sessionId), true,
                                 GENERATE_STATUS_TIMEOUT_MINUTES, TimeUnit.MINUTES))
                 .doOnCancel(() -> {
-                    this.saveStopHistoryRecord(conversationId, outputBuilder.toString());
-                    this.onStreamCancel(sessionId, userId, outputBuilder.toString());
+                    saveStopHistoryRecord(conversationId, outputBuilder.toString());
+                    onStreamCancel(sessionId, userId, outputBuilder.toString());
                 })
                 .takeWhile(response ->
                         Boolean.TRUE.equals(redisService.getCacheObject(generateStatusKey(sessionId))))
                 .concatMap(chatResponse ->
-                        this.transformChatResponse(chatResponse, outputBuilder, requestId))
+                        transformChatResponse(chatResponse, outputBuilder, requestId))
                 .doFinally(signalType -> {
                     redisService.deleteObject(generateStatusKey(sessionId));
-                    this.afterProcessStream(sessionId, userId, outputBuilder.toString());
+                    afterProcessStream(sessionId, userId, outputBuilder.toString());
                 });
     }
 
@@ -129,6 +130,14 @@ public abstract class AbstractBaseAgent implements BaseAgent {
     }
 
     /**
+     * 输出文本转换钩子：子类可覆盖此方法对 AI 输出的每段文本做后处理
+     * （如修正截断、统一格式化等），默认原样返回。
+     */
+    protected String transformOutputText(String text, String requestId) {
+        return text;
+    }
+
+    /**
      * 生成请求ID，子类可覆盖以自定义ID生成策略
      */
     protected String generateRequestId() {
@@ -141,14 +150,14 @@ public abstract class AbstractBaseAgent implements BaseAgent {
     protected ChatClient.ChatClientRequestSpec getChatClientRequest(
             UUID userId, String sessionId, String requestId,
             String conversationId, String question) {
-        return this.chatClient.prompt()
+        return chatClient.prompt()
                 .system(promptSystem ->
-                        promptSystem.text(this.systemMessage()).params(this.systemMessageParams()))
+                        promptSystem.text(systemMessage()).params(systemMessageParams()))
                 .advisors(advisor ->
-                        advisor.advisors(this.advisors())
-                                .params(this.advisorParams(userId, sessionId, requestId)))
-                .tools(this.tools())
-                .toolContext(this.toolContext(sessionId, requestId))
+                        advisor.advisors(advisors())
+                                .params(advisorParams(userId, sessionId, requestId)))
+                .tools(tools())
+                .toolContext(toolContext(sessionId, requestId))
                 .user(question);
     }
 
@@ -175,6 +184,7 @@ public abstract class AbstractBaseAgent implements BaseAgent {
         var output = result.getOutput();
         var text = output != null ? output.getText() : null;
         if (text != null) {
+            text = transformOutputText(text, requestId);
             outputBuilder.append(text);
         }
         if (StrUtil.isEmpty(text)) {
@@ -195,7 +205,7 @@ public abstract class AbstractBaseAgent implements BaseAgent {
         return Flux.fromIterable(buildToolResultEvents(dataEvent, toolResultMap));
     }
 
-    private List<ChatEventVO> buildToolResultEvents(ChatEventVO dataEvent,
+    protected List<ChatEventVO> buildToolResultEvents(ChatEventVO dataEvent,
                                                      Map<String, Object> toolResultMap) {
         List<ChatEventVO> events = new ArrayList<>(4);
         events.add(dataEvent);
@@ -207,12 +217,20 @@ public abstract class AbstractBaseAgent implements BaseAgent {
                     .eventData(webFunction)
                     .build());
         }
+
+        Object logExport = toolResultMap.get(LogOperationTools.TOOL_RESULT_KEY_EXPORT);
+        if (logExport != null) {
+            events.add(ChatEventVO.builder()
+                    .eventType(UserChatEventType.SYSTEM_DOWNLOAD.getValue())
+                    .eventData(logExport)
+                    .build());
+        }
         events.add(STOP_EVENT);
         return events;
     }
 
     private void saveStopHistoryRecord(String conversationId, String content) {
-        this.chatMemory.add(conversationId, new AssistantMessage(content));
+        chatMemory.add(conversationId, new AssistantMessage(content));
     }
 
     @Override
