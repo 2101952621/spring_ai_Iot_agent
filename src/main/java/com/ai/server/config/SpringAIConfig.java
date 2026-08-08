@@ -1,11 +1,9 @@
 package com.ai.server.config;
 
-import com.ai.server.agent.advisor.AiRecordOptimizationAdvisor;
 import com.ai.server.agent.memory.DBChatMemoryRepository;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
-import org.springframework.ai.chat.client.advisor.api.Advisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.ChatMemoryRepository;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
@@ -25,19 +23,21 @@ public class SpringAIConfig {
     }
 
     @Bean
-    public ChatClient chatClient(OpenAiChatModel model, ChatMemory chatMemory, Advisor recordOptimizationAdvisor) {
+    public ChatClient chatClient(OpenAiChatModel model, ChatMemory chatMemory) {
         return ChatClient
                 .builder(model)
                 .defaultAdvisors(
                         new SimpleLoggerAdvisor(),
-                        recordOptimizationAdvisor,
                         MessageChatMemoryAdvisor.builder(chatMemory).build()
                 )
                 .build();
     }
 
     @Bean
-    public Advisor recordOptimizationAdvisor(DBChatMemoryRepository myChatMemoryRepository) {
-        return new AiRecordOptimizationAdvisor(myChatMemoryRepository);
+    public ChatClient routeChatClient(OpenAiChatModel model) {
+        return ChatClient
+                .builder(model)
+                .defaultAdvisors(new SimpleLoggerAdvisor())
+                .build();
     }
 }

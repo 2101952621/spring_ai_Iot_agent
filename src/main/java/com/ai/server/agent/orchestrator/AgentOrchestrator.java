@@ -6,6 +6,8 @@ import com.ai.server.agent.enums.UserChatEventType;
 import com.ai.server.model.vo.ChatEventVO;
 import com.ai.server.service.ai.AgentService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.chat.memory.ChatMemory;
+import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
@@ -35,9 +37,11 @@ public class AgentOrchestrator {
     private final Map<AgentTypeEnum, BaseAgent> agentRegistry;
     private final BaseAgent routeAgent;
     private final AgentService agentService;
+    private final ChatMemory chatMemory;
 
     public AgentOrchestrator(List<BaseAgent> agents,
-                             @Lazy AgentService agentService) {
+                             @Lazy AgentService agentService,
+                             ChatMemory chatMemory) {
         this.agentRegistry = agents.stream()
                 .collect(Collectors.toMap(
                         BaseAgent::getAgentType,
@@ -50,6 +54,7 @@ public class AgentOrchestrator {
                 ));
         this.routeAgent = agentRegistry.get(AgentTypeEnum.ROUTE);
         this.agentService = agentService;
+        this.chatMemory = chatMemory;
         log.info("AgentOrchestrator 初始化完成，已注册 {} 个智能体: {}",
                 agentRegistry.size(),
                 agentRegistry.keySet().stream().map(AgentTypeEnum::getAgentName).toList());
@@ -65,6 +70,11 @@ public class AgentOrchestrator {
      */
     public Flux<ChatEventVO> orchestrate(String question, String sessionId, UUID userId) {
         agentService.update(sessionId, question, userId);
+        // 立即持久化用户消息到 ChatMemory，防止路由/分发阶段断连导致消息丢失
+        String conversationId = agentService.getConversationId(userId, sessionId);
+        chatMemory.add(conversationId, new UserMessage(question));
+        log.debug("用户消息已预保存: sessionId={}, conversationId={}", sessionId, conversationId);
+
         if (routeAgent == null) {
             log.error("路由智能体 (ROUTE) 未注册，无法进行意图识别");
             return fallbackResponse("系统路由服务暂不可用，请稍后再试");
@@ -75,7 +85,7 @@ public class AgentOrchestrator {
             log.info("意图识别结果: sessionId={}, result={}", sessionId, intentResult);
         } catch (Exception e) {
             log.error("意图识别失败: sessionId={}, error={}", sessionId, e.getMessage(), e);
-            return fallbackResponse("意图识别服务异常，请稍后再试");
+            return fallbackResponse("服务器暂时无响应，请稍后再试！");
         }
         AgentTypeEnum targetType = AgentTypeEnum.agentNameOf(intentResult);
         if (targetType != null) {

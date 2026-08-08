@@ -4,7 +4,10 @@ import com.ai.server.agent.enums.AgentTypeEnum;
 import com.ai.server.config.SystemConstant;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Component;
+
+import java.util.UUID;
 
 /**
  * 意图路由智能体 — AgentOrchestrator 中的 Intent Classifier
@@ -24,6 +27,8 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class RouteBaseAgent extends AbstractBaseAgent {
 
+    private final ChatClient routeChatClient;
+
     @Override
     public String systemMessage() {
         return SystemConstant.ROUTER;
@@ -32,6 +37,16 @@ public class RouteBaseAgent extends AbstractBaseAgent {
     @Override
     public AgentTypeEnum getAgentType() {
         return AgentTypeEnum.ROUTE;
+    }
+
+    @Override
+    protected ChatClient.ChatClientRequestSpec getChatClientRequest(
+            UUID userId, String sessionId, String requestId,
+            String conversationId, String question) {
+        return routeChatClient.prompt()
+                .system(promptSystem ->
+                        promptSystem.text(systemMessage()).params(systemMessageParams()))
+                .user(question);
     }
 
     /**

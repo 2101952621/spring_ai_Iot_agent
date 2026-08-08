@@ -1,6 +1,5 @@
 package com.ai.server.agent.memory;
 
-import com.ai.server.agent.enums.AgentTypeEnum;
 import com.ai.server.model.entity.ChatMessageEntity;
 import com.ai.server.service.ai.ChatMessageService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -16,9 +15,7 @@ import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -52,10 +49,27 @@ public class DBChatMemoryRepository implements ChatMemoryRepository {
         Assert.hasText(conversationId, "conversationId cannot be null or empty");
         Assert.notNull(messages, "messages cannot be null");
         Assert.noNullElements(messages, "messages cannot contain null elements");
+        List<Message> deduplicated = new ArrayList<>(messages.size());
+        for (Message msg : messages) {
+            if (deduplicated.isEmpty()) {
+                deduplicated.add(msg);
+                continue;
+            }
+            Message last = deduplicated.get(deduplicated.size() - 1);
+            boolean sameType = last.getMessageType() == msg.getMessageType();
+            boolean sameContent = Objects.equals(last.getText(), msg.getText());
+            if (sameType && sameContent) {
+                log.debug("相邻重复消息已去重: conversationId={}, type={}, index~{}",
+                        conversationId, msg.getMessageType().name(), deduplicated.size());
+                continue;
+            }
+            deduplicated.add(msg);
+        }
         chatMessageService.deleteByConversationId(conversationId);
-        List<ChatMessageEntity> entities = messages.stream()
-                .map(message -> toEntity(conversationId, messages.indexOf(message), message))
-                .collect(Collectors.toList());
+        List<ChatMessageEntity> entities = new ArrayList<>(deduplicated.size());
+        for (int i = 0; i < deduplicated.size(); i++) {
+            entities.add(toEntity(conversationId, i, deduplicated.get(i)));
+        }
         chatMessageService.saveAll(conversationId, entities);
     }
 
@@ -111,7 +125,4 @@ public class DBChatMemoryRepository implements ChatMemoryRepository {
         }
     }
 
-    public void optimizationRecord(String conversationId, AgentTypeEnum agentType) {
-        chatMessageService.optimization(conversationId, agentType.getAgentName());
-    }
 }

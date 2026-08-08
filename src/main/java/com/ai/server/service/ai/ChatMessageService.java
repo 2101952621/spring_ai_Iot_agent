@@ -7,7 +7,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Comparator;
 import java.util.List;
 
 @Slf4j
@@ -36,26 +35,5 @@ public class ChatMessageService {
     public void deleteByConversationId(String conversationId) {
         chatMessageRepository.deleteByConversationId(conversationId);
         chatMessageSearchService.deleteByConversationId(conversationId);
-    }
-
-    @Transactional
-    public void optimization(String conversationId, String agentName) {
-        List<ChatMessageEntity> messages = chatMessageRepository.findAllByConversationId(conversationId);
-        if (messages.isEmpty()) {
-            return;
-        }
-        messages.sort(Comparator.comparingInt(ChatMessageEntity::getMessageIndex).reversed());
-        int deleteCount = 0;
-        for (ChatMessageEntity message : messages) {
-            if (deleteCount >= 2) break;
-            chatMessageRepository.delete(message);
-            deleteCount++;
-        }
-        log.info("优化对话记录, conversationId={}, 删除最后{}条路由消息", conversationId, deleteCount);
-        List<ChatMessageEntity> remaining = chatMessageRepository.findAllByConversationId(conversationId);
-        chatMessageSearchService.deleteByConversationId(conversationId);
-        if (!remaining.isEmpty()) {
-            chatMessageSearchService.indexBatch(remaining);
-        }
     }
 }

@@ -3,6 +3,7 @@ package com.ai.server.service.ai;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.stream.StreamUtil;
 import cn.hutool.core.util.IdUtil;
+import com.ai.server.agent.enums.AgentTypeEnum;
 import com.ai.server.agent.enums.SystemMessageType;
 import com.ai.server.model.vo.ChatSessionVO;
 import com.ai.server.model.vo.HotExampleVO;
