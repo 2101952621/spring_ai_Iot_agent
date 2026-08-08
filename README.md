@@ -11,8 +11,37 @@
 
 配套前端仓库：[spring_ai_Iot_agent_web](https://github.com/2101952621/spring_ai_Iot_agent_web)
 
-https://github.com/user-attachments/assets/e391efb8-b3e0-4c3a-8a7b-15a333243000
+<img width="1859" height="910" alt="Snipaste_2026-08-08_11-55-47" src="https://github.com/user-attachments/assets/f66d89d8-da50-4a9a-a511-440a26334600" />
 
+<img width="1869" height="913" alt="Snipaste_2026-08-08_11-56-17" src="https://github.com/user-attachments/assets/beed4f1f-c413-4842-b668-c9d61945520f" />
+
+<img width="1870" height="913" alt="Snipaste_2026-08-08_11-56-03" src="https://github.com/user-attachments/assets/c694e9d0-d58c-4b06-a4f6-9e95b33d9ad5" />
+
+---
+
+## 版本更新记录
+
+### v1.0.2（2026-08-08）
+**新增功能**
+- AI 设备重启
+- AI 日志操作（导出、删除）
+- 识别用户对话意图，智能推荐操作（日志操作、功能操作）
+
+**Bugfix**
+- 修复会话记录保存问题
+
+### v1.0.1（2026-08-01）
+**新增功能**
+- 历史用户对话数据搜索(ES)
+- AI 一键打开功能
+
+**Bugfix**
+- 修复后台重复保存用户对话消息的问题
+
+### v1.0.0（2026-07-26）
+**基础功能**
+- 基础对话功能
+- 设备推荐功能
 
 ---
 
@@ -46,31 +75,53 @@ https://github.com/user-attachments/assets/e391efb8-b3e0-4c3a-8a7b-15a333243000
                        │ SSE / REST API
                        ▼
               ┌─────────────────┐
-              │  Controller 层   │
+              │  Controller 层  │
               │  RestController │
               └────────┬────────┘
                        │
               ┌────────▼────────┐
-              │   Service 层     │
-              │  Agent/User/Auth │
+              │   Service 层    │
+              │  Agent/User/Auth│
               └────────┬────────┘
-                       │
+                       │  每轮对话统一入口
               ┌────────▼────────┐
               │ AgentOrchestrator│ ← 意图路由（策略模式）
               └────────┬────────┘
-          ┌────────────┼────────────┐
-          ▼            ▼            ▼
-   ┌───────────┐ ┌───────────┐ ┌───────────┐
-   │ RouteAgent│ │RecommendAgent│ │KnowledgeAgent│
-   │ (意图分类) │ │(设备推荐+RAG) │ │ (知识答疑) │
-   └───────────┘ └─────┬─────┘ └───────────┘
                        │
-          ┌────────────┼────────────┐
-          ▼            ▼            ▼
-   ┌──────────┐ ┌─────────┐ ┌───────────┐
-   │ ES向量存储│ │Tool Call│ │ PostgreSQL │
-   │  (RAG)   │ │(设备查询)│ │  (业务库)  │
-   └──────────┘ └─────────┘ └───────────┘
+                ┌──────▼──────┐
+                │ RouteAgent   │ ← 意图分类（RECOMMEND/KNOWLEDGE/WEB_OPEN/SYSTEM_CONTROL/FALLBACK）
+                └──────┬──────┘    ← 支持识别"确认性回复"（结合上下文二次路由）
+       ┌───────┬───────┼─────────┬───────────┐
+       ▼       ▼       ▼         ▼           ▼
+ ┌──────────┐┌──────────┐┌──────────┐┌──────────┐
+ │Recommend ││Knowledge ││ WebOpen  ││SystemCtl │
+ │  Agent   ││  Agent   ││  Agent   ││  Agent   │
+ │(设备推荐  ││(知识答疑  ││(网页打开  ││(系统控制  │
+ │  +RAG)   ││+意图推荐) ││ +CARD)   ││+ToolCall)│
+ └────┬─────┘└────┬─────┘└────┬─────┘└────┬─────┘
+      │           │           │           │
+      ▼           ▼           ▼           ▼
+ ┌──────────┐ ┌─────────┐ ┌───────────────────┐
+ │ ES向量存储│ │Tool Call│ │     PostgreSQL     │
+ │  (RAG)   │ │(设备/系统)│ │      (业务库)      │
+ └──────────┘ └─────────┘ └───────────────────┘
+```
+
+**智能推荐操作闭环（Knowledge → 用户确认 → 二次路由）：**
+
+```
+KnowledgeAgent 解答知识问题
+     │
+     ├─ 识别问题场景，解答后主动推荐可执行操作
+     │   （导出/清理日志、设备重启、打开功能页面、推荐设备等）
+     ▼
+前端展示建议，等待用户确认
+     │  用户回复："好的，帮我导出" / "清理吧" / "帮我打开"
+     ▼
+RouteAgent 识别确认性回复（结合对话上下文还原原建议的操作类型）
+     │  → SYSTEM_CONTROL / WEB_OPEN / RECOMMEND
+     ▼
+对应 Agent 执行操作（Tool Calling）→ SSE 流式返回结果
 ```
 
 ### 核心设计模式
@@ -94,6 +145,8 @@ src/main/java/com/ai/server/
 │   ├── RouteBaseAgent.java       # 意图路由智能体
 │   ├── RecommendBaseAgent.java   # 设备推荐智能体（RAG）
 │   ├── KnowledgeBaseAgent.java   # 知识答疑智能体
+│   ├── WebOpenBaseAgent.java     # 网页功能打开智能体（Tool Calling + CARD 事件）
+│   ├── SystemControlAgent.java   # 系统控制智能体（日志操作、设备重启等）
 │   ├── advisor/                  # Advisor 拦截器
 │   ├── enums/                    # 枚举（AgentType、EventType）
 │   ├── memory/                   # 持久化记忆（PostgreSQL）
@@ -146,16 +199,19 @@ src/main/java/com/ai/server/
 2. LLM 分析用户意图，**仅输出**以下关键词之一：
   - `RECOMMEND` — 设备推荐意图（包含使用场景 + 关键需求关键词）
   - `KNOWLEDGE` — 知识答疑意图
-  - 问候语友好回应
-  - 兜底拒答文本
+  - `WEB_OPEN` — 网页功能打开意图（一键打开功能页面）
+  - `SYSTEM_CONTROL` — 系统控制意图（日志清理/导出、设备重启等）
+  - `FALLBACK` — 兜底意图（问候语或无关问题）
 3. `AgentOrchestrator` 根据返回文本匹配 `AgentTypeEnum`，从 Agent 注册表中获取对应 Agent 实例。
 4. 若意图匹配失败或 Agent 未注册，返回兜底响应流。
 ```
 RouteAgent.process() 同步输出示例：
   "推荐一款SOHO办公路由器"    →  "RECOMMEND"
   "交换机有什么作用"           →  "KNOWLEDGE"
-  "你好"                     →  "您好！有什么可以帮您？"
-  "今天天气"                  →  "抱歉我只处理平台相关问题"
+  "帮我打开设备管理页面"        →  "WEB_OPEN"
+  "重启一下这台设备"            →  "SYSTEM_CONTROL"
+  "你好"                     →  "FALLBACK"
+  "今天天气"                  →  "FALLBACK"
 ```
 ---
 ### 三、推荐 Agent 执行流程（RecommendBaseAgent）
@@ -394,7 +450,7 @@ AgentOrchestrator.stop(sessionId)
 > 在 `application.yml` 中配置阿里云 DashScope API Key 和模型名称。
 ### 4. 配置 Redis
 ### 5. 配置其他服务(非必要)
-邮件服务
+-邮件服务
 
 启动成功后访问：
 - **Swagger 文档**：[http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
@@ -411,30 +467,6 @@ AgentOrchestrator.stop(sessionId)
 部署时需将前端的 API 请求地址指向本服务的 `http://localhost:8080`。
 
 ---
-
-## API 接口概览
-
-| 模块 | 方法 | 路径 | 说明 | 认证 |
-|------|------|------|------|------|
-| AI 对话 | POST | `/api/ai/chat` | SSE 流式对话 | ✅ |
-| AI 对话 | POST | `/api/ai/stop/{sessionId}` | 停止生成 | ✅ |
-| 会话管理 | GET | `/api/ai/history` | 查询历史会话（按周/月分组） | ✅ |
-| 会话管理 | DELETE | `/api/ai/history` | 删除指定会话 | ✅ |
-| 会话管理 | PUT | `/api/ai/history` | 更新会话标题 | ✅ |
-| 热门示例 | GET | `/api/ai/hot` | 获取热门示例 | ✅ |
-| 认证 | POST | `/api/auth/login` | 用户登录 | ❌ |
-| 认证 | POST | `/api/auth/token` | 刷新 Token | ❌ |
-| 认证 | PUT | `/api/auth/password` | 修改密码 | ✅ |
-| 认证 | DELETE | `/api/auth/user` | 注销账号 | ✅ |
-| 用户 | GET | `/api/auth/me` | 获取当前用户信息 | ✅ |
-| 注册 | POST | `/api/customer/register` | 发送注册邮件 | ❌ |
-| 注册 | POST | `/api/customer/register-by-mail` | 邮箱注册 | ❌ |
-| 激活 | POST | `/api/noauth/activate` | 激活账号 | ❌ |
-| 密码重置 | POST | `/api/noauth/reset-password` | 发送密码重置邮件 | ❌ |
-| 密码重置 | POST | `/api/noauth/reset-password/check` | 验证重置令牌 | ❌ |
-| 密码重置 | POST | `/api/noauth/reset-password/reset` | 重置密码 | ❌ |
-
-> Token 通过请求头 `X-Authorization: Bearer <token>` 传递
 
 ## 安全提示
 
