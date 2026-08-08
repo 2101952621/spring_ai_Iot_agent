@@ -33,6 +33,11 @@ public enum AgentTypeEnum {
     WEB_OPEN("WEB_OPEN"),
 
     /**
+     * 系统控制智能体 — 系统操作（日志清理、日志导出、设备重启等）
+     */
+    SYSTEM_CONTROL("SYSTEM_CONTROL"),
+
+    /**
      * 兜底智能体 — 处理所有未匹配的请求
      */
     FALLBACK("FALLBACK");

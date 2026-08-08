@@ -170,6 +170,34 @@ COMMENT ON TABLE "public"."device_base_info" IS '设备基础信息表';
 
 
 -- ----------------------------
+-- Table structure for hot_example
+-- ----------------------------
+DROP TABLE IF EXISTS "public"."hot_example";
+CREATE TABLE "public"."hot_example" (
+  "id" BIGSERIAL NOT NULL,
+  "title" varchar(100) COLLATE "pg_catalog"."default" NOT NULL,
+  "describe_info" varchar(500) COLLATE "pg_catalog"."default" NOT NULL,
+  "sort_order" int4,
+  "create_time" timestamp(6) NOT NULL DEFAULT now(),
+  "update_time" timestamp(6) NOT NULL DEFAULT now()
+);
+
+-- ----------------------------
+-- Records of hot_example
+-- ----------------------------
+INSERT INTO "public"."hot_example" VALUES (1, '示例1', '帮我推荐一款交换机', 1, '2026-07-30 20:03:10.741129', '2026-07-30 20:03:10.741129');
+INSERT INTO "public"."hot_example" VALUES (2, '示例2', '9口千兆PoE交换机有什么特色?', 2, '2026-07-30 20:03:10.741129', '2026-07-30 20:03:10.741129');
+INSERT INTO "public"."hot_example" VALUES (3, '示例3', '三层交换机和二层交换机有什么区别?', 3, '2026-07-30 20:03:10.741129', '2026-07-30 20:03:10.741129');
+INSERT INTO "public"."hot_example" VALUES (4, '示例4', '帮我重启设备', 4, '2026-07-30 20:10:46.152828', '2026-07-30 20:10:46.152828');
+INSERT INTO "public"."hot_example" VALUES (5, '示例5', '家里的交换机应该怎么连接?', 5, '2026-07-30 20:10:46.152828', '2026-07-30 20:10:46.152828');
+INSERT INTO "public"."hot_example" VALUES (6, '示例6', '帮我导出日志?', 6, '2026-07-30 20:10:46.152828', '2026-07-30 20:10:46.152828');
+
+-- ----------------------------
+-- Primary Key structure for table hot_example
+-- ----------------------------
+ALTER TABLE "public"."hot_example" ADD CONSTRAINT "hot_example_pkey" PRIMARY KEY ("id");
+
+-- ----------------------------
 -- Table structure for web_function
 -- ----------------------------
 DROP TABLE IF EXISTS "public"."web_function";
@@ -237,6 +265,10 @@ INSERT INTO "public"."web_function" ("function_code","function_name","module","f
 ('version_notes','版本说明','平台信息','/version-notes',NULL,'查看平台各版本更新日志、新增功能、优化项及问题修复记录，帮助您快速了解产品演进与最新特性。',
 NULL,'版本说明页面仅展示平台已正式发布的版本信息，灰度或内测版本可能不在其中。',NULL,'icon-version','打开','WEB_FUNCTION','t',1);
 
+INSERT INTO "public"."web_function" ("function_code","function_name","module","function_path","base_url","description","config_method","precautions","suitable_devices","icon","button_text","card_type","is_enabled","sort_order") VALUES
+('account','账号设置','平台信息','/account',NULL,'用户账号信息设置',
+NULL,'账号设置用于用户基本信息修改，如密码、邮箱、手机号等。',NULL,'icon-version','打开','WEB_FUNCTION','t',1);
+
 -- ----------------------------
 -- Table structure for version_record
 -- ----------------------------
@@ -279,7 +311,8 @@ CREATE INDEX "idx_version_record_release_date" ON "public"."version_record" USIN
 -- ----------------------------
 INSERT INTO "public"."version_record" ("release_date","title","version","content","sort_order") VALUES
 ('2026-07-26','2026-07-26 AI Agent v1.0.0 更新说明','v1.0.0','[{"type":"基础功能","items":["基础推荐功能"]}]'::jsonb, 1),
-('2026-08-01','2026-08-01 AI Agent v1.0.1 更新说明','v1.0.1','[{"type":"新增功能","items":["历史用户对话数据搜索","AI一键打开功能"]},{"type":"bugfix","items":["修复后台重复保存用户对话消息的问题"]}]'::jsonb, 2);
+('2026-08-01','2026-08-01 AI Agent v1.0.1 更新说明','v1.0.1','[{"type":"新增功能","items":["历史用户对话数据搜索","AI一键打开功能"]},{"type":"bugfix","items":["修复后台重复保存用户对话消息的问题"]}]'::jsonb, 2),
+('2026-08-08','2026-08-08 AI Agent v1.0.2 更新说明','v1.0.2','[{"type":"新增功能","items":["AI设备重启","AI日志操作(导出删除)","识别用户对话意图，智能推荐操作(日志操作、功能操作)"]},{"type":"bugfix","items":["修复会话记录保存问题"]}]'::jsonb, 3);
 
 -- ----------------------------
 -- Table structure for operation_log

@@ -24,7 +24,12 @@ public enum UserChatEventType {
     /**
      * 卡片事件 — 前端渲染"打开网页"等功能卡片（带按钮）
      */
-    CARD(1004);
+    CARD(1004),
+
+    /**
+     * 调用系统下载事件
+     */
+    SYSTEM_DOWNLOAD(1005);
 
     private final int value;
 }
