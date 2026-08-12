@@ -207,8 +207,8 @@ public abstract class AbstractBaseAgent implements BaseAgent {
     }
 
     protected List<ChatEventVO> buildToolResultEvents(ChatEventVO dataEvent,
-                                                     Map<String, Object> toolResultMap) {
-        List<ChatEventVO> events = new ArrayList<>(4);
+                                                      Map<String, Object> toolResultMap) {
+        List<ChatEventVO> events = new ArrayList<>(6);
         events.add(dataEvent);
 
         Object webFunction = toolResultMap.get(WebFunctionTools.TOOL_RESULT_KEY);
@@ -224,6 +224,20 @@ public abstract class AbstractBaseAgent implements BaseAgent {
             events.add(ChatEventVO.builder()
                     .eventType(UserChatEventType.SYSTEM_DOWNLOAD.getValue())
                     .eventData(logExport)
+                    .build());
+        }
+        Object logReport = toolResultMap.get(LogOperationTools.TOOL_RESULT_KEY_REPORT);
+        if (logReport != null) {
+            events.add(ChatEventVO.builder()
+                    .eventType(UserChatEventType.SYSTEM_DOWNLOAD.getValue())
+                    .eventData(logReport)
+                    .build());
+        }
+        Object analysisPreview = toolResultMap.get(LogOperationTools.TOOL_RESULT_KEY_ANALYSIS);
+        if (analysisPreview != null) {
+            events.add(ChatEventVO.builder()
+                    .eventType(UserChatEventType.SYSTEM_ANALYSIS.getValue())
+                    .eventData(analysisPreview)
                     .build());
         }
         events.add(STOP_EVENT);

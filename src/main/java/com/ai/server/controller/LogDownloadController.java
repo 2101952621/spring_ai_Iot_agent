@@ -25,11 +25,50 @@ public class LogDownloadController {
     private final RedisService redisService;
 
     private static final String EXPORT_FILE_PREFIX = "log:export:";
+    private static final String REPORT_FILE_PREFIX = "log:report:";
+
+    /**
+     * 下载 Word 分析报告文件
+     */
+    @GetMapping("/download/report/{token}")
+    public void downloadReportFile(@PathVariable String token, HttpServletResponse response) {
+        String redisKey = REPORT_FILE_PREFIX + token;
+        String base64Data = redisService.getCacheObject(redisKey);
+
+        if (base64Data == null) {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            try {
+                response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                response.setCharacterEncoding("UTF-8");
+                response.getWriter().write("{\"code\":404,\"message\":\"下载链接已过期或不存在，请重新生成报告\"}");
+            } catch (IOException ignored) {
+                log.error("Failed to write response");
+            }
+            return;
+        }
+
+        byte[] fileBytes = Base64.getDecoder().decode(base64Data);
+        String fileName = "operation_log_analysis_report.docx";
+
+        response.setContentType("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+        response.setCharacterEncoding("UTF-8");
+        response.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
+        response.setHeader("Access-Control-Expose-Headers", "Content-Disposition");
+        response.setContentLength(fileBytes.length);
+
+        try {
+            response.getOutputStream().write(fileBytes);
+            response.getOutputStream().flush();
+        } catch (IOException e) {
+            log.error("下载分析报告失败: token={}, error={}", token, e.getMessage());
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }
+    }
 
     /**
      * 根据下载令牌下载导出的Excel文件
      */
-    @GetMapping("/download/{token}")
+    @GetMapping("/download/excel/{token}")
     public void downloadLogFile(@PathVariable String token, HttpServletResponse response) {
         String redisKey = EXPORT_FILE_PREFIX + token;
         String base64Data = redisService.getCacheObject(redisKey);

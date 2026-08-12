@@ -29,7 +29,12 @@ public enum UserChatEventType {
     /**
      * 调用系统下载事件
      */
-    SYSTEM_DOWNLOAD(1005);
+    SYSTEM_DOWNLOAD(1005),
+
+    /**
+     * 分析预览事件 — 前端渲染日志分析洞察卡片（含统计概览 + 智能建议）
+     */
+    SYSTEM_ANALYSIS(1006);
 
     private final int value;
 }

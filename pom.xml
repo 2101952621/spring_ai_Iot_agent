@@ -118,11 +118,18 @@
             <version>${hutool.version}</version>
         </dependency>
 
-        <!-- Apache POI for Excel Export -->
+        <!-- Apache POI for Excel/Word Export -->
         <dependency>
             <groupId>org.apache.poi</groupId>
             <artifactId>poi-ooxml</artifactId>
             <version>5.2.5</version>
+        </dependency>
+
+        <!-- JFreeChart for statistical chart generation -->
+        <dependency>
+            <groupId>org.jfree</groupId>
+            <artifactId>jfreechart</artifactId>
+            <version>1.5.4</version>
         </dependency>
 
         <!-- Spring Boot AOP -->
