@@ -38,6 +38,11 @@ public enum AgentTypeEnum {
     SYSTEM_CONTROL("SYSTEM_CONTROL"),
 
     /**
+     * 地图出行智能体 — 高德地图 MCP 服务（天气、地点搜索、路线规划等）
+     */
+    MAP("MAP"),
+
+    /**
      * 兜底智能体 — 处理所有未匹配的请求
      */
     FALLBACK("FALLBACK");

@@ -157,6 +157,7 @@ public abstract class AbstractBaseAgent implements BaseAgent {
                         advisor.advisors(advisors())
                                 .params(advisorParams(userId, sessionId, requestId)))
                 .tools(tools())
+                .toolCallbacks(toolCallbacks())
                 .toolContext(toolContext(sessionId, requestId))
                 .user(question);
     }

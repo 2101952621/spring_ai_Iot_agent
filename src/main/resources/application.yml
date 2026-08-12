@@ -46,6 +46,32 @@ spring:
         dimensions: 1024
         # 相似度算法: cosine（余弦相似度）
         similarity: cosine
+    # ================================================================
+    # MCP Client Configuration - 高德地图 MCP 服务（SSE 模式）
+    # ================================================================
+    mcp:
+      client:
+        enabled: true
+        # 客户端名称（MCP 协议握手时上报）
+        name: amap-mcp-client
+        version: 1.0.0
+        # 同步调用模式
+        type: SYNC
+        # MCP 请求超时时间
+        request-timeout: 30s
+        # 初始化超时时间
+        initialization-timeout: 30s
+        # 将 MCP 工具注册为 ToolCallback（供 Agent 调用）
+        toolcallback:
+          enabled: true
+        # SSE 连接配置
+        sse:
+          connections:
+            amap:
+              # 高德地图 MCP 服务基础地址
+              url: "${AMAP_MCP_BASE_URL:https://mcp.amap.com}"
+              # SSE 端点（携带高德 Web 服务 API Key）
+              sse-endpoint: "/sse?key=${AMAP_MCP_API_KEY:your-amap-web-service-api-key}"
   logging:
     level:
       org.springframework.ai.chat.client.advisor: DEBUG

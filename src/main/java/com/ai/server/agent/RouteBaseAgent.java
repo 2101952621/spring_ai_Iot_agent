@@ -5,6 +5,8 @@ import com.ai.server.config.SystemConstant;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
@@ -27,7 +29,9 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class RouteBaseAgent extends AbstractBaseAgent {
 
-    private final ChatClient routeChatClient;
+    @Autowired
+    @Qualifier("routeChatClient")
+    private ChatClient routeChatClient;
 
     @Override
     public String systemMessage() {

@@ -3,6 +3,7 @@ package com.ai.server.agent;
 import com.ai.server.agent.enums.AgentTypeEnum;
 import com.ai.server.model.vo.ChatEventVO;
 import org.springframework.ai.chat.client.advisor.api.Advisor;
+import org.springframework.ai.tool.ToolCallback;
 import reactor.core.publisher.Flux;
 
 import java.util.List;
@@ -15,6 +16,8 @@ import java.util.UUID;
 public interface BaseAgent {
 
     Object[] EMPTY_OBJECTS = new Object[0];
+
+    ToolCallback[] EMPTY_TOOL_CALLBACKS = new ToolCallback[0];
 
     Flux<ChatEventVO> processStream(String question, String sessionId, UUID userId);
 
@@ -30,6 +33,13 @@ public interface BaseAgent {
 
     default Object[] tools() {
         return EMPTY_OBJECTS;
+    }
+
+    /**
+     * MCP 等外部工具回调（ToolCallback），与本地 @Tool 工具（tools()）并行挂载
+     */
+    default ToolCallback[] toolCallbacks() {
+        return EMPTY_TOOL_CALLBACKS;
     }
 
     default Map<String, Object> toolContext(String sessionId, String requestId) {
