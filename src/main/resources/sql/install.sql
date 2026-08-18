@@ -313,6 +313,7 @@ INSERT INTO "public"."version_record" ("release_date","title","version","content
 ('2026-07-26','2026-07-26 AI Agent v1.0.0 更新说明','v1.0.0','[{"type":"基础功能","items":["基础推荐功能"]}]'::jsonb, 1),
 ('2026-08-01','2026-08-01 AI Agent v1.0.1 更新说明','v1.0.1','[{"type":"新增功能","items":["历史用户对话数据搜索","AI一键打开功能"]},{"type":"bugfix","items":["修复后台重复保存用户对话消息的问题"]}]'::jsonb, 2),
 ('2026-08-08','2026-08-08 AI Agent v1.0.2 更新说明','v1.0.2','[{"type":"新增功能","items":["AI设备重启","AI日志操作(导出删除)","识别用户对话意图，智能推荐操作(日志操作、功能操作)"]},{"type":"bugfix","items":["修复会话记录保存问题"]}]'::jsonb, 3);
+('2026-08-15','2026-08-15 AI Agent v1.0.3 更新说明','v1.0.3','[{"type":"新增功能","items":["AI文档分析报告","引入高德地图MCP""]},{"type":"bugfix","items":["修复用户对话刷新问题"]}]'::jsonb, 4);
 
 -- ----------------------------
 -- Table structure for operation_log
